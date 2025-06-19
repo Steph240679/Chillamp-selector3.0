@@ -1,1 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Chillamp Selector</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 900px; margin: auto; background: #f5f5f5; }
+    h1 { text-align: center; }
+    label { font-weight: bold; display: block; margin-top: 10px; }
+    select, input[type="checkbox"] { width: 100%; padding: 5px; margin-top: 5px; }
+    #effets label { font-weight: normal; display: block; margin-left: 10px; }
+    button { margin-top: 15px; padding: 10px 20px; cursor: pointer; }
+    pre { background: #222; color: #eee; padding: 10px; overflow: auto; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Chillamp Selector</h1>
 
+  <label for="bassiste">Bassiste</label>
+  <select id="bassiste"></select>
+
+  <label for="basse">Ta basse</label>
+  <select id="basse">
+    <option>Fender Precision Bass</option>
+    <option>Fender Jazz Bass</option>
+    <option>Music Man StingRay</option>
+    <option>Rickenbacker 4001</option>
+    <option>Yamaha BB</option>
+    <option>Warwick Thumb</option>
+  </select>
+
+  <label for="ampli">Ton ampli</label>
+  <select id="ampli">
+    <option>Ampeg SVT-CL</option>
+    <option>Genz-Benz Streamliner STM-600</option>
+    <option>Mesa Boogie Subway</option>
+    <option>Markbass Little Mark</option>
+  </select>
+
+  <label for="baffle">Ton baffle</label>
+  <select id="baffle">
+    <option>Chillamp 4x10 Neo</option>
+    <option>Ampeg 8x10</option>
+    <option>Markbass 4x10</option>
+    <option>Chillamp 1x15 Classic</option>
+  </select>
+
+  <label>Effets utilisés</label>
+  <div id="effets">
+    <label><input type="checkbox" value="Compresseur"> Compresseur</label>
+    <label><input type="checkbox" value="Overdrive"> Overdrive</label>
+    <label><input type="checkbox" value="EQ"> EQ</label>
+    <label><input type="checkbox" value="Chorus"> Chorus</label>
+    <label><input type="checkbox" value="Octaver"> Octaver</label>
+    <label><input type="checkbox" value="Envelope Filter"> Envelope Filter</label>
+    <label><input type="checkbox" value="Limiter"> Limiter</label>
+  </div>
+
+  <button onclick="envoyerPreset()">Générer le preset</button>
+  <button onclick="telechargerPDF()">Télécharger le PDF</button>
+
+  <pre id="resultat"></pre>
+
+<script>
+async function chargerBassistes() {
+  const response = await fetch('/bassistes');
+  const noms = await response.json();
+  const select = document.getElementById('bassiste');
+  noms.forEach(nom => {
+    const option = document.createElement('option');
+    option.value = nom;
+    option.textContent = nom;
+    select.appendChild(option);
+  });
+}
+
+async function envoyerPreset() {
+  const data = getFormData();
+  const res = await fetch('/get_preset', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  const json = await res.json();
+  document.getElementById('resultat').innerText = JSON.stringify(json, null, 2);
+}
+
+function telechargerPDF() {
+  const data = getFormData();
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = '/generate_pdf';
+
+  for (let key in data) {
+    if (Array.isArray(data[key])) {
+      data[key].forEach(val => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = val;
+        form.appendChild(input);
+      });
+    } else {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = key;
+      input.value = data[key];
+      form.appendChild(input);
+    }
+  }
+
+  document.body.appendChild(form);
+  form.submit();
+  form.remove();
+}
+
+function getFormData() {
+  return {
+    bassiste: document.getElementById("bassiste").value,
+    basse: document.getElementById("basse").value,
+    ampli: document.getElementById("ampli").value,
+    baffle: document.getElementById("baffle").value,
+    effets: Array.from(document.querySelectorAll("input[name='effets']:checked, #effets input:checked")).map(e => e.value)
+  };
+}
+
+window.onload = chargerBassistes;
+</script>
+
+</body>
+</html>
