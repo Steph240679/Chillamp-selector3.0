@@ -1,1 +1,63 @@
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f4f4f4;
+  color: #333;
+  max-width: 960px;
+  margin: auto;
+  padding: 20px;
+}
 
+h1 {
+  text-align: center;
+  color: #222;
+  margin-bottom: 30px;
+}
+
+label {
+  font-weight: 600;
+  margin-top: 15px;
+  display: block;
+}
+
+select, input[type="text"], input[type="checkbox"] {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  box-sizing: border-box;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  background-color: white;
+}
+
+#effets label {
+  font-weight: normal;
+  margin-left: 10px;
+  margin-top: 5px;
+}
+
+button {
+  background-color: #0066cc;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  margin-top: 20px;
+  margin-right: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+button:hover {
+  background-color: #004c99;
+}
+
+pre {
+  background-color: #222;
+  color: #eee;
+  padding: 15px;
+  margin-top: 20px;
+  border-radius: 5px;
+  font-size: 14px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
