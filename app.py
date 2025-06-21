@@ -2,8 +2,7 @@ from flask import Flask, render_template, request, jsonify, send_file
 from preset_engine import get_presets_for_combination
 from presets import presets
 from fpdf import FPDF
-import tempfile
-import os
+import io
 
 app = Flask(__name__)
 
@@ -54,9 +53,17 @@ def generate_pdf():
     for effet, reglages in preset['reglages']['reglages_effets'].items():
         pdf.multi_cell(0, 10, f"{effet} : {reglages}")
 
-    temp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-    pdf.output(temp.name)
-    return send_file(temp.name, as_attachment=True, download_name="preset_chillamp.pdf")
+    # Génération du PDF en mémoire
+    buffer = io.BytesIO()
+    pdf.output(buffer)
+    buffer.seek(0)
+
+    return send_file(
+        buffer,
+        mimetype='application/pdf',
+        as_attachment=True,
+        download_name='preset_chillamp.pdf'
+    )
 
 if __name__ == '__main__':
     app.run(debug=True)
