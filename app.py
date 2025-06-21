@@ -54,10 +54,12 @@ def generate_pdf():
         # Calcul du preset
         preset = get_presets_for_combination(bassiste, basse, ampli, baffle, effets)
 
-        # Création du PDF
+        # Création du PDF avec police Unicode
         pdf = FPDF()
         pdf.add_page()
-        pdf.set_font('Arial', '', 12)
+        # Ajout de la police Unicode DejaVu
+        pdf.add_font('DejaVu', '', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', uni=True)
+        pdf.set_font('DejaVu', '', 12)
 
         # Contenu du PDF
         pdf.cell(0, 10, f"Chillamp Selector - Preset pour {preset['bassiste']}", ln=True)
@@ -65,24 +67,25 @@ def generate_pdf():
         pdf.ln(5)
         pdf.multi_cell(0, 10, preset['message'])
         pdf.ln(10)
-        pdf.set_font('Arial', 'B', 12)
+
+        # Chaîne du signal
+        pdf.set_font('DejaVu', 'B', 12)
         pdf.cell(0, 10, 'Chaîne du signal :', ln=True)
-        pdf.set_font('Arial', '', 12)
+        pdf.set_font('DejaVu', '', 12)
         chemin_signal = f"{basse} → {', '.join(effets)} → {ampli} → {baffle}"
         pdf.multi_cell(0, 10, chemin_signal)
         pdf.ln(5)
-        pdf.set_font('Arial', 'B', 12)
+
+        # Réglages des effets
+        pdf.set_font('DejaVu', 'B', 12)
         pdf.cell(0, 10, 'Réglages des effets :', ln=True)
-        pdf.set_font('Arial', '', 12)
+        pdf.set_font('DejaVu', '', 12)
         for effet, reglages in preset['reglages']['reglages_effets'].items():
             pdf.multi_cell(0, 8, f"- {effet} : {reglages}")
 
-        # Export en mémoire en gérant string ou bytes
+        # Export en mémoire
         raw = pdf.output(dest='S')
-        if isinstance(raw, str):
-            pdf_bytes = raw.encode('latin-1', errors='replace')
-        else:
-            pdf_bytes = raw
+        pdf_bytes = raw.encode('latin-1') if isinstance(raw, str) else raw
         buffer = io.BytesIO(pdf_bytes)
         buffer.seek(0)
 
@@ -97,11 +100,8 @@ def generate_pdf():
     except Exception as e:
         # Journalisation de l'erreur pour debug
         app.logger.error('Erreur génération PDF : %s', e, exc_info=True)
-        # Retourne le message d'erreur pour debug
         return (f"Erreur interne lors de la génération du PDF: {e}", 500)
 
 if __name__ == '__main__':
-    # Démarrage de l'application en mode debug pour dev local
-    app.run(debug=True, host='0.0.0.0', port=5000)
     # Démarrage de l'application en mode debug pour dev local
     app.run(debug=True, host='0.0.0.0', port=5000)
