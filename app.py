@@ -5,7 +5,8 @@ from fpdf import FPDF
 import tempfile
 import os
 
-app = Flask(app.py)
+from flask import Flask
+app = Flask(__name__)
 
 @app.route('/')
 def index():
