@@ -43,27 +43,22 @@ def generate_pdf():
     Génère un PDF du preset et le renvoie en téléchargement.
     """
     try:
-        # Récupération des données du formulaire
         data = request.form.to_dict(flat=False)
         bassiste = data.get('bassiste', [''])[0]
         basse     = data.get('basse', [''])[0]
         ampli     = data.get('ampli', [''])[0]
         baffle    = data.get('baffle', [''])[0]
         effets    = data.get('effets', [])
-
-        # Calcul du preset
+        
         preset = get_presets_for_combination(bassiste, basse, ampli, baffle, effets)
 
-        # Création du PDF avec police Unicode
         pdf = FPDF()
         pdf.add_page()
-        # Ajout des polices Unicode DejaVu (regular et bold)
         font_path = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
         pdf.add_font('DejaVu', '', font_path, uni=True)
         pdf.add_font('DejaVu', 'B', font_path, uni=True)
         pdf.set_font('DejaVu', '', 12)
 
-        # Contenu du PDF
         pdf.cell(0, 10, f"Chillamp Selector - Preset pour {preset['bassiste']}", ln=True)
         pdf.set_font('DejaVu', 'B', 12)
         pdf.cell(0, 10, f"Score de fidélité : {preset['score_fidelite']} %", ln=True)
@@ -72,7 +67,6 @@ def generate_pdf():
         pdf.multi_cell(0, 10, preset['message'])
         pdf.ln(10)
 
-        # Chaîne du signal
         pdf.set_font('DejaVu', 'B', 12)
         pdf.cell(0, 10, 'Chaîne du signal :', ln=True)
         pdf.set_font('DejaVu', '', 12)
@@ -80,20 +74,17 @@ def generate_pdf():
         pdf.multi_cell(0, 10, chemin_signal)
         pdf.ln(5)
 
-        # Réglages des effets
         pdf.set_font('DejaVu', 'B', 12)
         pdf.cell(0, 10, 'Réglages des effets :', ln=True)
         pdf.set_font('DejaVu', '', 12)
         for effet, reglages in preset['reglages']['reglages_effets'].items():
             pdf.multi_cell(0, 8, f"- {effet} : {reglages}")
 
-        # Export en mémoire
         raw = pdf.output(dest='S')
         pdf_bytes = raw.encode('latin-1') if isinstance(raw, str) else raw
         buffer = io.BytesIO(pdf_bytes)
         buffer.seek(0)
 
-        # Envoi du PDF
         return send_file(
             buffer,
             mimetype='application/pdf',
@@ -102,11 +93,8 @@ def generate_pdf():
         )
 
     except Exception as e:
-        # Journalisation de l'erreur pour debug
         app.logger.error('Erreur génération PDF : %s', e, exc_info=True)
         return (f"Erreur interne lors de la génération du PDF: {e}", 500)
 
 if __name__ == '__main__':
-    # Démarrage de l'application en mode debug pour dev local
     app.run(debug=True, host='0.0.0.0', port=5000)
-```
