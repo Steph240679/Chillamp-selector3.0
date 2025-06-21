@@ -3,6 +3,8 @@ from preset_engine import get_presets_for_combination
 from presets import presets
 from fpdf import FPDF
 import tempfile
+
+app = Flask(__name__)
 import os
 
 @app.route('/')
