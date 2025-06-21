@@ -1,69 +1,108 @@
+```python
 from flask import Flask, render_template, request, jsonify, send_file
 from preset_engine import get_presets_for_combination
 from presets import presets
 from fpdf import FPDF
 import io
 
+# Initialisation de l'application Flask
 app = Flask(__name__)
 
 @app.route('/')
 def index():
+    """
+    Page d'accueil : formulaire de sélection des paramètres.
+    """
     return render_template('index.html')
 
 @app.route('/bassistes')
 def bassistes():
-    noms = sorted([preset['nom'] for preset in presets])
+    """
+    Renvoie la liste des bassistes disponibles en JSON.
+    """
+    noms = sorted(preset['nom'] for preset in presets)
     return jsonify(noms)
 
 @app.route('/get_preset', methods=['POST'])
 def get_preset():
-    data = request.get_json()
+    """
+    Point de terminaison AJAX pour récupérer un preset selon la configuration choisie.
+    """
+    data = request.get_json() or {}
     resultat = get_presets_for_combination(
-        data.get("bassiste"),
-        data.get("basse"),
-        data.get("ampli"),
-        data.get("baffle"),
-        data.get("effets", [])
+        data.get('bassiste'),
+        data.get('basse'),
+        data.get('ampli'),
+        data.get('baffle'),
+        data.get('effets', [])
     )
     return jsonify(resultat)
 
 @app.route('/generate_pdf', methods=['POST'])
 def generate_pdf():
-    data = request.form.to_dict(flat=False)
-    bassiste = data.get("bassiste", [""])[0]
-    basse = data.get("basse", [""])[0]
-    ampli = data.get("ampli", [""])[0]
-    baffle = data.get("baffle", [""])[0]
-    effets = data.get("effets", [])
+    """
+    Génère un PDF du preset et le renvoie en téléchargement.
+    """
+    try:
+        # Récupération des données du formulaire
+        data = request.form.to_dict(flat=False)
+        bassiste = data.get('bassiste', [''])[0]
+        basse     = data.get('basse', [''])[0]
+        ampli     = data.get('ampli', [''])[0]
+        baffle    = data.get('baffle', [''])[0]
+        effets    = data.get('effets', [])
 
-    preset = get_presets_for_combination(bassiste, basse, ampli, baffle, effets)
+        # Calcul du preset
+        preset = get_presets_for_combination(bassiste, basse, ampli, baffle, effets)
 
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
+        # Création du PDF
+        pdf = FPDF()
+        pdf.add_page()
+        # Si Arial pose problème, ajoute la police :
+        # pdf.add_font('Arial', '', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', uni=True)
+        pdf.set_font('Arial', '', 12)
 
-    pdf.cell(200, 10, f"Chillamp Selector - Preset pour {preset['bassiste']}", ln=True)
-    pdf.cell(200, 10, f"Score de fidélité : {preset['score_fidelite']}%", ln=True)
-    pdf.multi_cell(0, 10, f"\n{preset['message']}\n")
+        # Titre et informations générales
+        pdf.cell(0, 10, f"Chillamp Selector - Preset pour {preset['bassiste']}", ln=True)
+        pdf.cell(0, 10, f"Score de fidélité : {preset['score_fidelite']} %", ln=True)
+        pdf.ln(5)
+        pdf.multi_cell(0, 10, preset['message'])
+        pdf.ln(10)
 
-    pdf.cell(200, 10, "Chaîne du signal :", ln=True)
-    pdf.multi_cell(0, 10, f"{basse} → {', '.join(effets)} → {ampli} → {baffle}\n")
+        # Chaîne du signal
+        pdf.set_font('Arial', 'B', 12)
+        pdf.cell(0, 10, 'Chaîne du signal :', ln=True)
+        pdf.set_font('Arial', '', 12)
+        chemin_signal = f"{basse} → {', '.join(effets)} → {ampli} → {baffle}"
+        pdf.multi_cell(0, 10, chemin_signal)
+        pdf.ln(5)
 
-    pdf.cell(200, 10, "Réglages des effets :", ln=True)
-    for effet, reglages in preset['reglages']['reglages_effets'].items():
-        pdf.multi_cell(0, 10, f"{effet} : {reglages}")
+        # Réglages des effets
+        pdf.set_font('Arial', 'B', 12)
+        pdf.cell(0, 10, 'Réglages des effets :', ln=True)
+        pdf.set_font('Arial', '', 12)
+        for effet, reglages in preset['reglages']['reglages_effets'].items():
+            pdf.multi_cell(0, 8, f"- {effet} : {reglages}")
 
-    # Génération du PDF en mémoire
-    buffer = io.BytesIO()
-    pdf.output(buffer)
-    buffer.seek(0)
+        # Export en mémoire
+        pdf_output = pdf.output(dest='S').encode('latin-1')
+        buffer = io.BytesIO(pdf_output)
+        buffer.seek(0)
 
-    return send_file(
-        buffer,
-        mimetype='application/pdf',
-        as_attachment=True,
-        download_name='preset_chillamp.pdf'
-    )
+        # Envoi du PDF
+        return send_file(
+            buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name='preset_chillamp.pdf'
+        )
+
+    except Exception as e:
+        # Journalisation de l'erreur pour debug
+        app.logger.error('Erreur génération PDF : %s', e, exc_info=True)
+        return 'Erreur interne lors de la génération du PDF', 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Démarrage de l'application en mode debug pour dev local
+    app.run(debug=True, host='0.0.0.0', port=5000)
+```
