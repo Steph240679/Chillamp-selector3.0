@@ -57,14 +57,18 @@ def generate_pdf():
         # Création du PDF avec police Unicode
         pdf = FPDF()
         pdf.add_page()
-        # Ajout de la police Unicode DejaVu
-        pdf.add_font('DejaVu', '', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', uni=True)
+        # Ajout des polices Unicode DejaVu (regular et bold)
+        font_path = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
+        pdf.add_font('DejaVu', '', font_path, uni=True)
+        pdf.add_font('DejaVu', 'B', font_path, uni=True)
         pdf.set_font('DejaVu', '', 12)
 
         # Contenu du PDF
         pdf.cell(0, 10, f"Chillamp Selector - Preset pour {preset['bassiste']}", ln=True)
+        pdf.set_font('DejaVu', 'B', 12)
         pdf.cell(0, 10, f"Score de fidélité : {preset['score_fidelite']} %", ln=True)
         pdf.ln(5)
+        pdf.set_font('DejaVu', '', 12)
         pdf.multi_cell(0, 10, preset['message'])
         pdf.ln(10)
 
@@ -105,3 +109,4 @@ def generate_pdf():
 if __name__ == '__main__':
     # Démarrage de l'application en mode debug pour dev local
     app.run(debug=True, host='0.0.0.0', port=5000)
+```
