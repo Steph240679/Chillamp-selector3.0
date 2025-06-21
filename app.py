@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify, send_file
 from preset_engine import get_presets_for_combination
 from presets import presets
-from fpdf import FPDF
+from fpdf2 import FPDF
 import tempfile
 import os
 
