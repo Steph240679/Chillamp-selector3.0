@@ -1,4 +1,3 @@
-```python
 from flask import Flask, render_template, request, jsonify, send_file
 from preset_engine import get_presets_for_combination
 from presets import presets
@@ -105,4 +104,3 @@ def generate_pdf():
 if __name__ == '__main__':
     # Démarrage de l'application en mode debug pour dev local
     app.run(debug=True, host='0.0.0.0', port=5000)
-```
